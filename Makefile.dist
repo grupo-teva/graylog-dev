@@ -37,10 +37,10 @@ ssh-root: ## SSH into the graylog container as root
 	docker exec -it -u root ${GRAYLOG} bash
 
 logs-mongodb: ## Tails the MongoDB container log
-	U_ID=${UID} docker logs -follow ${MONGODB}
+	U_ID=${UID} docker logs --follow ${MONGODB}
 
 logs-elastic: ## Tails the Elastic container log
-	U_ID=${UID} docker logs -follow ${ELASTIC}
+	U_ID=${UID} docker logs --follow ${ELASTIC}
 
 logs-graylog: ## Tails the Graylog cointainer log
-	U_ID=${UID} docker logs -follow ${GRAYLOG}
+	U_ID=${UID} docker logs --follow ${GRAYLOG}

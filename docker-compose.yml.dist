@@ -45,8 +45,10 @@ services:
             - ROOT_TIMEZONE=Europe/Madrid
             - GRAYLOG_PASSWORD_SECRET=1234567890123456
             - GRAYLOG_ROOT_PASSWORD_SHA2=7a51d064a1a216a692f753fcdab276e4ff201a01d8b66f56d50d4d719fd0dc87
-            - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
             - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
+            # 127.0.0.1 solo funciona en local → en remoto indicar la IP del servidor
+            # Obviar si se usa Nginx como proxy inverso
+            - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
         entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh
         depends_on:
             - mongo
