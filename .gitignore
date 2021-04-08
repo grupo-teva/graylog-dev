@@ -1,0 +1,6 @@
+###> Cointainers config. stuff ###
+docker-compose.yml
+Dockerfile
+Makefile
+*.conf
+###< Cointainers config. stuff ###

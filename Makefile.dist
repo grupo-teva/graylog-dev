@@ -1,0 +1,46 @@
+#!/bin/bash
+
+MONGODB = graylog-mongodb
+ELASTIC = graylog-elastic
+GRAYLOG = graylog-graylog
+OS := $(shell uname)
+
+ifeq ($(OS),Linux)
+	UID = $(shell id -u)
+else
+	UID = 1000
+endif
+
+help: ## Show this help message
+	@echo 'usage: make [target]'
+	@echo
+	@echo 'targets:'
+	@egrep '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#'
+
+run: ## Start the containers	
+    docker network create graylog-network || true
+	U_ID=${UID} docker-compose up -d --remove-orphans
+
+stop: ## Stop the containers
+	U_ID=${UID} docker-compose stop
+
+restart: ## Restart the containers
+	$(MAKE) stop && $(MAKE) run
+
+build: ## Rebuilds all the containers
+	U_ID=${UID} docker-compose build
+
+ssh: ## SSH into the graylog container
+	docker exec -it --user ${UID} ${GRAYLOG} bash
+
+ssh-root: ## SSH into the graylog container as root
+	docker exec -it -u root ${GRAYLOG} bash
+
+logs-mongodb: ## Tails the MongoDB container log
+	U_ID=${UID} docker logs ${MONGODB}
+
+logs-elastic: ## Tails the Elastic container log
+	U_ID=${UID} docker logs ${ELASTIC}
+
+logs-graylog: ## Tails the Graylog cointainer log
+	U_ID=${UID} docker logs ${GRAYLOG}

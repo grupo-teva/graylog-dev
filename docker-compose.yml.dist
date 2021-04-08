@@ -1,0 +1,92 @@
+version: '3.5'
+
+services:
+    mongo:
+        container_name: graylog-mongodb
+        image: mongo:4.2
+        restart: always
+        volumes:
+            - mongodb_data:/data/db
+            - /etc/localtime:/etc/localtime:ro
+        networks:
+            - graylog-network
+        
+    elasticsearch:
+        container_name: graylog-elastic
+        image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
+        restart: always
+        environment:
+            - http.host=0.0.0.0
+            - transport.host=localhost
+            - network.host=0.0.0.0
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        deploy:
+            resources:
+                limits:
+                    memory: 1g
+        volumes:
+            - elastic_data:/usr/share/elasticsearch/data
+            - /etc/localtime:/etc/localtime:ro
+        networks:
+            - graylog-network
+
+    graylog:
+        container_name: graylog-graylog
+        image: graylog/graylog:4.0
+        restart: always
+        volumes:
+            - graylog_data:/usr/share/graylog/data
+            - ./graylog/plugin:/usr/share/graylog/plugin
+        environment:
+            - ROOT_TIMEZONE=Europe/Madrid
+            - GRAYLOG_PASSWORD_SECRET=1234567890123456
+            - GRAYLOG_ROOT_PASSWORD_SHA2=7a51d064a1a216a692f753fcdab276e4ff201a01d8b66f56d50d4d719fd0dc87
+            - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+            - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
+        entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh
+        depends_on:
+            - mongo
+            - elasticsearch
+        ports:
+            # Graylog web interface and REST API
+            - 9000:9000
+            # Syslog TCP
+            - 1514:1514
+            # Syslog UDP
+            - 1514:1514/udp
+            # GELF TCP
+            - 12201:12201
+            # GELF UDP
+            - 12201:12201/udp
+        networks:
+            - graylog-network
+
+    graylog-web:
+        container_name: graylog-web
+        build:
+            context: ./docker/nginx
+            args:
+                UID: $U_ID
+        ports:
+            - 250:80
+            - 8443:443
+        restart: always
+        depends_on:
+            - graylog
+        networks:
+            - graylog-network    
+
+networks:
+    graylog-network:
+        external: true
+
+volumes:
+    mongodb_data:
+
+    elastic_data:
+
+    graylog_data:
