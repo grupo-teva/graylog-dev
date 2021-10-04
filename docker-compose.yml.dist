@@ -1,71 +1,67 @@
-version: '3.5'
+version: "3.8"
 
 services:
-    mongo:
+    mongodb:
         container_name: graylog-mongodb
-        image: mongo:4.2
-        restart: always
+        image: "mongo:4.2"
         volumes:
-            - mongodb_data:/data/db
+            - "mongodb_data:/data/db"
             - /etc/localtime:/etc/localtime:ro
-        networks:
-            - graylog-network
-        
+        restart: "always"
+
     elasticsearch:
         container_name: graylog-elastic
-        image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
-        restart: always
         environment:
-            - http.host=0.0.0.0
-            - transport.host=localhost
-            - network.host=0.0.0.0
-            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+            ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+            bootstrap.memory_lock: "true"
+            discovery.type: "single-node"
+            http.host: "0.0.0.0"
+            action.auto_create_index: "false"
+        image: "docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2"
         ulimits:
             memlock:
-                soft: -1
                 hard: -1
-        deploy:
-            resources:
-                limits:
-                    memory: 1g
+                soft: -1
         volumes:
-            - elastic_data:/usr/share/elasticsearch/data
+            - "es_data:/usr/share/elasticsearch/data"
             - /etc/localtime:/etc/localtime:ro
-        networks:
-            - graylog-network
+        restart: "always"
 
     graylog:
         container_name: graylog-graylog
-        image: graylog/graylog:4.0
-        restart: always
-        volumes:
-            - graylog_data:/usr/share/graylog/data
-            - ./graylog/plugin:/usr/share/graylog/plugin
-        environment:
-            - ROOT_TIMEZONE=Europe/Madrid
-            - GRAYLOG_PASSWORD_SECRET=1234567890123456
-            - GRAYLOG_ROOT_PASSWORD_SHA2=7a51d064a1a216a692f753fcdab276e4ff201a01d8b66f56d50d4d719fd0dc87
-            - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
-            # 127.0.0.1 solo funciona en local → en remoto indicar la IP del servidor
-            # Obviar si se usa Nginx como proxy inverso
-            - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
-        entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh
+        image: "graylog/graylog:4.1"
         depends_on:
-            - mongo
-            - elasticsearch
+            elasticsearch:
+                condition: "service_started"
+            mongodb:
+                condition: "service_started"
+        entrypoint: "/usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh"
+        environment:
+            GRAYLOG_NODE_ID_FILE: "/usr/share/graylog/data/config/node-id"
+            GRAYLOG_PASSWORD_SECRET: ${GRAYLOG_PASSWORD_SECRET:?Please configure GRAYLOG_PASSWORD_SECRET in the .env file}
+            GRAYLOG_ROOT_PASSWORD_SHA2: ${GRAYLOG_ROOT_PASSWORD_SHA2:?Please configure GRAYLOG_ROOT_PASSWORD_SHA2 in the .env file}
+            GRAYLOG_HTTP_BIND_ADDRESS: "0.0.0.0:9000"
+            GRAYLOG_HTTP_EXTERNAL_URI: "http://localhost:9000/"
+            GRAYLOG_ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+            GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
         ports:
-            # Graylog web interface and REST API
-            - 9000:9000
-            # Syslog TCP
-            - 1514:1514
-            # Syslog UDP
-            - 1514:1514/udp
-            # GELF TCP
-            - 12201:12201
-            # GELF UDP
-            - 12201:12201/udp
-        networks:
-            - graylog-network
+            - "5044:5044/tcp"   # Beats
+            - "5140:5140/udp"   # Syslog
+            - "5140:5140/tcp"   # Syslog
+            - "5555:5555/tcp"   # RAW TCP
+            - "5555:5555/udp"   # RAW TCP
+            - "9000:9000/tcp"   # Server API
+            - "12201:12201/tcp" # GELF TCP
+            - "12201:12201/udp" # GELF UDP
+            #- "10000:10000/tcp" # Custom TCP port
+            #- "10000:10000/udp" # Custom UDP port
+            - "13301:13301/tcp" # Forwarder data
+            - "13302:13302/tcp" # Forwarder config
+        volumes:
+            - "graylog_data:/usr/share/graylog/data/data"
+            - "graylog_journal:/usr/share/graylog/data/journal"
+            - /etc/localtime:/etc/localtime:ro
+        restart: "always"
 
     graylog-web:
         container_name: graylog-web
@@ -78,17 +74,11 @@ services:
             - 8443:443
         restart: always
         depends_on:
-            - graylog
-        networks:
-            - graylog-network    
-
-networks:
-    graylog-network:
-        external: true
+            graylog:
+                condition: "service_started"
 
 volumes:
     mongodb_data:
-
-    elastic_data:
-
+    es_data:
     graylog_data:
+    graylog_journal:
