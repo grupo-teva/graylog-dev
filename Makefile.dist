@@ -17,12 +17,14 @@ help: ## Show this help message
 	@echo 'targets:'
 	@egrep '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#'
 
-run: ## Start the containers	
-	docker network create graylog-network || true
-	U_ID=${UID} docker-compose up -d --remove-orphans
+run: ## Start the containers
+	U_ID=${UID} docker-compose up -d
 
 stop: ## Stop the containers
 	U_ID=${UID} docker-compose stop
+
+terminate: ## Stop the containers (with --remove-orphans option set)
+	U_ID=${UID} docker-compose down --remove-orphans -v
 
 restart: ## Restart the containers
 	$(MAKE) stop && $(MAKE) run

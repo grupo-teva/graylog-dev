@@ -1,4 +1,5 @@
 ###> Cointainers config. stuff ###
+.env
 docker-compose.yml
 Dockerfile
 Makefile

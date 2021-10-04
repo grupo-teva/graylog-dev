@@ -5,8 +5,13 @@ Plantilla para desplegar instancias de [Graylog](https://www.graylog.org/) total
 - __Graylog__ _(as himself)_
 - [Nginx](https://www.nginx.com/), como _proxy inverso_, si fuera necesario.
 
+Ojo cuidao, que la gente de Graylog no quiere que usemos esto en entornos productivos, y, probablemente, tengan razón.
+
 ## Variables de entorno a considerar en el contenedoer de _Graylog_
-Deben ser actualizadas convenientemente
+Se encuentran en el fichero `.env.dist`, y es necesario hacer dos cosas dos:
+* Crear a partir de él un fichero `.env`, y 
+* Editarlo y establecer las variables convenientemente.
+
 ### _GRAYLOG_PASSWORD_SECRET_ y _GRAYLOG_ROOT_PASSWORD_SHA2_
 El primero es la clave del usuario _admin_, y el segundo un _hash_ de dicha clave. Para crear este _hash_ de la clave que vayamos a poner, podemos usar estos comandos:
 
@@ -22,19 +27,21 @@ Las configuraciones por defecto funcionan en local, por lo que deben ser adecuad
 ## Cómo utilizar esta plantilla
 1. Clonar el repositorio
 2. Adecuarlo a los requerimientos del nuevo despliegue.
-3. Desplegar el entorno, a través del _Makefile_.
+3. Desplegar el entorno, a través del _makefile_.
 
 ## Uso detallado del *Makefile*
-#### *Make help*
+#### _make help_ o _make_
 Muestra sucintamente toda las funcionalidades en lenguas foráneas:  
 
 <pre>
+❯ make
 usage: make [target]
 
 targets:
 help              Show this help message
 run               Start the containers
 stop              Stop the containers
+terminate         Stop the containers (with --remove-orphans option set)
 restart           Restart the containers
 build             Rebuilds all the containers
 ssh               SSH into the graylog container
@@ -42,32 +49,36 @@ ssh-root          SSH into the graylog container as root
 logs-mongodb      Tails the MongoDB container log
 logs-elastic      Tails the Elastic container log
 logs-graylog      Tails the Graylog cointainer log
+
 </pre> 
 
-#### _Make build_
+#### _make build_
 (Re)Construye el entorno.
 
-#### _Make run_
+#### _make run_
 Crea, si no existe, una red de _Docker_ compartida por todos los contenedores, y, posteriormente, arranca los contenedores en el orden establecido.
 
-#### _Make stop_
+#### _make stop_
 Detiene los contenedores.
 
-#### _Make restart_
+#### _make terminate_
+Detiene los contenedores.
+
+#### _make restart_
 Detiene y vuelve a arrancar los contenedores.
 
-#### _Make ssh_
+#### _make ssh_
 Abre una sesión _SSH_ en el contenedor del _Graylog_.
 
-#### _Make ssh-root_
+#### _make ssh-root_
 Abre una sesión _SSH_ en el contenedor del _Graylog_ con el usuario _root_.
 
-#### _Make logs-mongodb_
+#### _make logs-mongodb_
 Muestra en modo de seguimiento los _logs_ del contenedor de _MongoDB_.
 
-#### _Make logs-elastic_
+#### _make logs-elastic_
 Muestra en modo de seguimiento los _logs_ del contenedor de _MongoDB_.
 
-#### _Make logs-graylog_
+#### _make logs-graylog_
 Muestra en modo de seguimiento los _logs_ del contenedor de _MongoDB_.
 
