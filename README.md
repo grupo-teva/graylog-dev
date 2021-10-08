@@ -24,6 +24,15 @@ El primero es la clave del usuario _admin_, y el segundo un _hash_ de dicha clav
 Las configuraciones por defecto funcionan en local, por lo que deben ser adecuadas al servidor donde se realiza el despliegue. En el siguiente enlace se detallan sus características → https://docs.graylog.org/en/4.0/pages/configuration/server.conf.html#web-rest-api-options
 
 
+### Otras variables de entorno
+
+En `./graylog/config` se encuentra un fichero `graylog.conf` completo; todas sus variables pueden importarse fácil e indoloramente en el apartado _environment_ del fichero `docker-compose.yml`, anteponiendo el prefijo «GRAYLOG_» al nombre de la variable del fichero, todo en mayúsculas, y asociándola con el valor deseado.
+
+Por ejemplo, la hora del nodo está definida por defecto a **UTC**; en una instalación normal editaríamos la variable `root_timezone` del fichero `graylog.conf`, pero nosotros lo cambiaremos así:
+<pre>
+GRAYLOG_ROOT_TIMEZONE: "Europe/Madrid"
+</pre>
+
 ## Cómo utilizar esta plantilla
 1. Clonar el repositorio
 2. Adecuarlo a los requerimientos del nuevo despliegue.
@@ -31,7 +40,7 @@ Las configuraciones por defecto funcionan en local, por lo que deben ser adecuad
 
 ## Uso detallado del *Makefile*
 #### _make help_ o _make_
-Muestra sucintamente toda las funcionalidades en lenguas foráneas:  
+Muestra, sucintamente, toda las funcionalidades:
 
 <pre>
 ❯ make
@@ -43,7 +52,7 @@ run               Start the containers
 stop              Stop the containers
 terminate         Stop the containers (with --remove-orphans option set)
 restart           Restart the containers
-build             Rebuilds all the containers
+build             Rebuilds the custom Nginx container
 ssh               SSH into the graylog container
 ssh-root          SSH into the graylog container as root
 logs-mongodb      Tails the MongoDB container log
@@ -52,9 +61,6 @@ logs-graylog      Tails the Graylog cointainer log
 
 </pre> 
 
-#### _make build_
-(Re)Construye el entorno.
-
 #### _make run_
 Crea, si no existe, una red de _Docker_ compartida por todos los contenedores, y, posteriormente, arranca los contenedores en el orden establecido.
 
@@ -62,10 +68,13 @@ Crea, si no existe, una red de _Docker_ compartida por todos los contenedores, y
 Detiene los contenedores.
 
 #### _make terminate_
-Detiene los contenedores.
+Detiene los contenedores y los elimina posteriormente.
 
 #### _make restart_
 Detiene y vuelve a arrancar los contenedores.
+
+#### _make build_
+(Re)Construye el contenedor de Nginx, si se precisa, pues el resto de contenedores vienen directos de sendas imágenes.
 
 #### _make ssh_
 Abre una sesión _SSH_ en el contenedor del _Graylog_.
@@ -81,4 +90,3 @@ Muestra en modo de seguimiento los _logs_ del contenedor de _MongoDB_.
 
 #### _make logs-graylog_
 Muestra en modo de seguimiento los _logs_ del contenedor de _MongoDB_.
-

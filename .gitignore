@@ -1,7 +1,11 @@
-###> Cointainers config. stuff ###
+###> Containers config. stuff ###
 .env
 docker-compose.yml
 Dockerfile
 Makefile
+###< Containers config. stuff ###
+
+###> Generic config. stuff ###
 *.conf
-###< Cointainers config. stuff ###
+###< Generic config. stuff ###
+
